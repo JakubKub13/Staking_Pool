@@ -65,5 +65,75 @@ contract StakingPool {
         claimManager = _claimManager;
     }
 
+    function init(
+        uint256 _start,
+        uint256 _end,
+        uint256 _hourlyRatio,
+        uint256 _hardCap,
+        uint256 _contributionLimit,
+        bytes32[] memory _patronRoles
+    ) external payable onlyOwner preventReset {
+        require(_start >= block.timestamp, "StakingPool: Not started");
+        require(_end - _start >= 1 days, "StakingPool: Duration should be at least 1 day");
+        require(_hardCap >= _contributionLimit, "StakingPool: Hardcap exceeds contribution limit");
 
+        uint256 maxFutureRewards = compound(
+            _hourlyRatio,
+            _hardCap,
+            _start,
+            _end
+        ) - _hardCap;
+
+        require(msg.value >= maxFutureRewards, "StakingPool: Rewards lower than expected");
+
+        start = _start;
+        end = _end;
+        hourlyRatio = _hourlyRatio;
+        hardCap = _hardCap;
+        contributionLimit = _contributionLimit;
+        patronRoles = _patronRoles;
+        remainingRewards = msg.value;
+        initiator = msg.sender;
+
+        emit StakingPoolInitialized(msg.value, block.timestamp);
+    }
+
+    function terminate() external initialized onlyOwner {
+        require(start >= block.timestamp, "StakingPool: Cannot terminate after pool was started");
+        uint256 payout = remainingRewards;
+        address recipient = initiator;
+
+        delete start;
+        delete end;
+        delete hourlyRatio;
+        delete hardCap;
+        delete contributionLimit;
+        delete patronRoles;
+        delete initiator;
+
+        payable(recipient).call{value: payout}("");
+        //payable(recipient).transfer(payout);
+    }
+
+    function stake() public payable onlyPatrons(msg.sender) initialized belowContributionLimit {}
+
+
+    function compound(
+        uint256 hRatio,
+        uint256 hCap,
+        uint256 compoundStart,
+        uint256 compoundEnd
+    ) public view returns (uint256) {
+        uint256 n = (compoundEnd - compoundStart) / 1 hours;
+
+        return ABDKMath64x64.mulu(
+            ABDKMath64x64.pow(
+                ABDKMath64x64.add(
+                    ABDKMath64x64.fromUInt(1), ABDKMath64x64.divu(hRatio, 10**18)
+                ),
+                n
+            ),
+            hCap
+        );
+    }
 }
