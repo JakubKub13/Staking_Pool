@@ -136,7 +136,12 @@ contract StakingPool {
 
     function calculateFutureReward() private view returns (uint256) {}
 
-    function accountFutureReward() private {}
+    function accountFutureReward() private {
+        uint256 futureReward = calculateFutureReward();
+        futureRewards -= stakes[msg.sender].futureReward;
+        futureRewards += futureReward;
+        stakes[msg.sender].futureReward = futureReward;
+    }
 
     function updateStake(uint256 deposit, uint256 compounded) private {
         stakes[msg.sender].deposit = deposit;
