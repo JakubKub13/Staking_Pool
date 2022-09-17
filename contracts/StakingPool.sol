@@ -134,7 +134,11 @@ contract StakingPool {
 
     function sweep() public initialized onlyOwner {}
 
-    function calculateFutureReward() private view returns (uint256) {}
+    function calculateFutureReward() private view returns (uint256) {
+        return 
+            compound(hourlyRatio, stakes[msg.sender].compounded, block.timestamp, end) - stakes[msg.sender].deposit;
+
+    }
 
     function accountFutureReward() private {
         uint256 futureReward = calculateFutureReward();
@@ -149,7 +153,6 @@ contract StakingPool {
         if(block.timestamp - stakes[msg.sender].time >= 1 hours) {
             stakes[msg.sender].time = block.timestamp;
         }
-
     }
 
     function total() public view returns (uint256, uint256) {
