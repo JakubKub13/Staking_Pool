@@ -115,7 +115,13 @@ contract StakingPool {
         //payable(recipient).transfer(payout);
     }
 
-    function stake() public payable onlyPatrons(msg.sender) initialized belowContributionLimit {}
+    function stake() public payable onlyPatrons(msg.sender) initialized belowContributionLimit {
+        require(block.timestamp >= start, "StakingPool: Pool has not started yet");
+        require(block.timestamp <= end, "StakingPool: Pool has already expired");
+        require(hardCap - totalStaked >= msg.value, "StakingPool: Pool is full");
+
+        (, uint256 compounded) = total();
+    }
 
     function unstake(uint256 value) public initialized {}
 
