@@ -117,6 +117,19 @@ contract StakingPool {
 
     function stake() public payable onlyPatrons(msg.sender) initialized belowContributionLimit {}
 
+    function unstake(uint256 value) public initialized {}
+
+    function unstakeAll() public initialized {}
+
+    function sweep() public initialized onlyOwner {}
+
+    function calculateFutureReward() private view returns (uint256) {}
+
+    function accountFutureReward() private {}
+
+    function updateStake(uint256 deposit, uint256 compounded) private {}
+
+    function total() public view returns (uint256, uint256) {}
 
     function compound(
         uint256 hRatio,
