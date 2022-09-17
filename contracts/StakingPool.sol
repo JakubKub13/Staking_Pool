@@ -121,6 +121,11 @@ contract StakingPool {
         require(hardCap - totalStaked >= msg.value, "StakingPool: Pool is full");
 
         (, uint256 compounded) = total();
+
+        updateStake(stakes[msg.sender].deposit + msg.value, compounded + msg.value);
+        accountFutureReward();
+        totalStaked += msg.value;
+        emit StakeAdded(msg.sender, msg.value, block.timestamp);
     }
 
     function unstake(uint256 value) public initialized {}
