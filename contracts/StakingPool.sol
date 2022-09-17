@@ -135,7 +135,18 @@ contract StakingPool {
 
     function updateStake(uint256 deposit, uint256 compounded) private {}
 
-    function total() public view returns (uint256, uint256) {}
+    function total() public view returns (uint256, uint256) {
+        Stake memory senderStake = stakes[msg.sender];
+
+        if(senderStake.time == 0) {
+            return(0, 0);
+        }
+
+        uint256 compoundEnd = block.timestamp > end ? end : block.timestamp;
+
+        uint256 compounded = compound(hourlyRatio, senderStake.compounded, senderStake.time, compoundEnd);
+        return (senderStake.deposit, compounded);
+    }
 
     function compound(
         uint256 hRatio,
