@@ -130,7 +130,10 @@ contract StakingPool {
 
     function unstake(uint256 value) public initialized {}
 
-    function unstakeAll() public initialized {}
+    function unstakeAll() public initialized {
+        (, uint256 compounded) = total();
+        unstake(compounded);
+    }
 
     function sweep() public initialized onlyOwner {}
 
