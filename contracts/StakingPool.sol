@@ -138,7 +138,14 @@ contract StakingPool {
 
     function accountFutureReward() private {}
 
-    function updateStake(uint256 deposit, uint256 compounded) private {}
+    function updateStake(uint256 deposit, uint256 compounded) private {
+        stakes[msg.sender].deposit = deposit;
+        stakes[msg.sender].compounded = compounded;
+        if(block.timestamp - stakes[msg.sender].time >= 1 hours) {
+            stakes[msg.sender].time = block.timestamp;
+        }
+
+    }
 
     function total() public view returns (uint256, uint256) {
         Stake memory senderStake = stakes[msg.sender];
