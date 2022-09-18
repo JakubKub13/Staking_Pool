@@ -111,7 +111,8 @@ contract StakingPool {
         delete patronRoles;
         delete initiator;
 
-        payable(recipient).call{value: payout}("");
+        (bool success, ) = payable(recipient).call{value: payout}("");
+        require(success, "StakingPool: Transaction has failed");
         //payable(recipient).transfer(payout);
     }
 
@@ -128,7 +129,24 @@ contract StakingPool {
         emit StakeAdded(msg.sender, msg.value, block.timestamp);
     }
 
-    function unstake(uint256 value) public initialized {}
+    function unstake(uint256 value) public initialized {
+        (uint256 deposit, uint256 compounded) = total();
+        require(compounded > 0, "StakingPool: No funds to unstake");
+        require(compounded >= value, "StakingPool: Requested value is above the compounded funds");
+        uint256 depositComponent = value <= deposit ? value : deposit;
+        uint256 rewardComponent = value > deposit ? value - deposit : 0;
+        if(value == compounded) {
+            delete stakes[msg.sender];
+        } else {
+            updateStake(stakes[msg.sender].deposit - depositComponent, compounded - value);
+            accountFutureReward();
+        }
+        futureRewards -= rewardComponent;
+        remainingRewards -= rewardComponent;
+        totalStaked -= depositComponent;
+        payable(msg.sender).transfer(value);
+        emit StakeWithdrawn(msg.sender, value);
+    }
 
     function unstakeAll() public initialized {
         (, uint256 compounded) = total();
