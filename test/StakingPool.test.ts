@@ -27,7 +27,26 @@ describe("Staking Pool", function () {
         await timeTravel(provider, seconds);
     }
 
-    
+    async function fixture( 
+        hardCap: BigNumber,
+        start: number,
+        [owner, owner2, patron1, patron2]: Wallet[],
+        provider: MockProvider,
+        initializePool = true,
+        travel = true,
+    ) {
+        const duration = 3600 * 24 * 30;
+        const end = start + duration;
+        const claimManagerMocked = await deployContract(patron1, claimManagerABI);
+        const stakingPool = (await deployContract(owner, StakingPoolContract, [
+            ownerRoleDef,
+            claimManagerMocked.address,
+        ])) as StakingPool;
+        const rewards = (await stakingPool.compound(ratioInt, hardCap, start, end)).sub(hardCap);
+
+        if (initializePool) {}
+
+    }
 
 
 })
