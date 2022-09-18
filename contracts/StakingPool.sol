@@ -144,7 +144,9 @@ contract StakingPool {
         futureRewards -= rewardComponent;
         remainingRewards -= rewardComponent;
         totalStaked -= depositComponent;
-        payable(msg.sender).transfer(value);
+        (bool success, ) = payable(msg.sender).call{value: value}("");
+        require(success, "StakingPool: Transaction has failed");
+        //payable(msg.sender).transfer(value);
         emit StakeWithdrawn(msg.sender, value);
     }
 
@@ -158,7 +160,9 @@ contract StakingPool {
        require(block.timestamp >= end, "Cannot sweep before expiry");
        uint256 payout = remainingRewards - futureRewards;
        sweeped = true;
-       payable(initiator).transfer(payout);
+       (bool success,) = payable(initiator).call{value: payout}("");
+       require(success, "StakingPool: Transaction has failed");
+       //payable(initiator).transfer(payout);
     }
 
     function calculateFutureReward() private view returns (uint256) {
