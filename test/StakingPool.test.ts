@@ -114,4 +114,14 @@ describe("Staking Pool", function () {
         return setup;
     }
 
+    it("Should revert if contribution limit is higher than hardCap", async function () {
+        const { asOwner, end, rewards, start, owner, claimManagerMocked, defaultRoleVersion } = await loadFixture(uninitializeFixture,);
+        const aboveContributionLimit = hardCap.add(1);
+        await claimManagerMocked.mock.hasRole.withArgs(owner.address, ownerRoleDef, defaultRoleVersion).returns(true);
+        await expect(asOwner.init(start, end, ratioInt, hardCap, aboveContributionLimit, [patronRoleDef], {
+            value: rewards,
+        }),
+        ).to.be.revertedWith("Stake is greater than contribution limit")
+    });
+
 })
