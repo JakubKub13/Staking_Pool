@@ -105,4 +105,13 @@ describe("Staking Pool", function () {
         return fixture(hardCap, start, wallets, provider, false);
     }
 
+    async function initialStakeAndTravelToExpiryFixture(wallets: Wallet[], provider: MockProvider) {
+        const { timestamp } = await provider.getBlock("latest");
+        const start = timestamp + 10;
+        const setup = await fixture(hardCap, start, wallets, provider);
+        const { asPatron1, duration } = setup;
+        await stakeAndTravel(asPatron1, oneETH, duration, setup.provider);
+        return setup;
+    }
+
 })
