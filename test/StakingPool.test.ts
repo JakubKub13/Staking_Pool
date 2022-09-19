@@ -1,3 +1,4 @@
+import { pTokens } from 'ptokens'
 import { expect, use } from "chai";
 import { StakingPool } from "../ethers"; // artifacts ?
 import { Wallet, utils, BigNumber } from "ethers";
@@ -144,4 +145,94 @@ describe("Staking Pool", function () {
         await expect(await asOwner2.terminate()).to.changeEtherBalance(owner, rewards)
     });
 
+    describe("Staking", async () => {
+        it("Should revert if patron does not have appropriate role", async function () {
+            const { patron1, asPatron1, claimManagerMocked } = await loadFixture(defaultFixture);
+            await claimManagerMocked.mock.hasRole.withArgs(patron1.address, patronRoleDef, defaultRoleVersion).returns(false);
+            await expect(asPatron1.stake({ value: oneETH })).to.be.revertedWith("StakingPool: Not a patron")
+        })
+
+        it("Should revert if staking pool is not initialized", async function () {
+            const { asPatron1 } = await loadFixture(uninitializeFixture);
+            await expect(asPatron1.stake({ value: oneETH }),
+            ).to.be.revertedWith("StakingPool is not initialized yet");
+        });
+
+        it("Should be possible to stake funds", async function () {
+            const { stakingPool, patron1, asPatron1, provider } = await loadFixture(defaultFixture);
+            const tx = await asPatron1.stake({ value: oneETH });
+            const { blockNumber } = await tx.wait();
+            const { timestamp } =  await provider.getBlock(blockNumber);
+            await expect(tx).to.emit(stakingPool, "StakeAdded").withArgs(patron1.address, oneETH, timestamp);
+            const [deposit, compounded ] = await asPatron1.total();
+            expect(deposit).to.be.equal(compounded);
+            expect(deposit).to.be.equal(oneETH);
+        });
+
+        it("One user should stake multiple times", async function () {
+            const { asPatron1 } = await loadFixture(defaultFixture);
+            await asPatron1.stake({ value: oneETH });
+            await asPatron1.stake({ value: oneETH });
+            const [deposit, compounded] = await asPatron1.total();
+            expect(deposit).to.be.equal(compounded);
+            expect(deposit).to.be.equal(oneETH.mul(2));
+        });
+
+        it("Should increase the balance of the staking pool", async function () {
+            const { stakingPool, asPatron1 } = await loadFixture(defaultFixture);
+            await expect(await asPatron1.stake({ value: oneETH })).to.changeEtherBalance(stakingPool, oneETH);
+        });
+
+        it("Should revert when staking pool reached the hard cap", async function () {
+            const hardCap = contributionLimit;
+            const { asPatron1, asPatron2, asOwner, end, rewards, start } = await loadFixture(
+                async(wallets: Wallet[], provider: MockProvider) => {
+                    const { timestamp } = await provider.getBlock("latest");
+                    const start = timestamp + 10;
+                    return fixture(hardCap, start, wallets, provider);
+                });
+                await asPatron1.stake({ value: contributionLimit });
+                await expect(asPatron2.stake({ value: oneETH })).to.be.revertedWith("StakingPool: Pool is full");
+        });
+
+        it("Should revert if an owner tries to reinitialize already started Staking Pool", async function () {
+            const { asOwner, start, end, rewards } = await loadFixture(defaultFixture);
+            await expect(asOwner.init(start, end, ratioInt, hardCap, contributionLimit, [patronRoleDef], {
+                value: rewards,
+            })).to.be.revertedWith("StakingPool already initialized");
+        });
+
+        it("Should revert if stake is greater than contribution limit", async function () {
+            const { asPatron1 } = await loadFixture(defaultFixture);
+            const patronStake = utils.parseUnits("50001", "ether");
+            await expect(asPatron1.stake({ value: patronStake })).to.be.revertedWith("Stake is greater than contribution limit");
+        });
+
+        it("Should revert if staking pool has not yet started", async function () {
+            const { asPatron1 } = await loadFixture(async (wallets: Wallet[], provider: MockProvider) => {
+                const { timestamp } = await provider.getBlock("latest");
+                const start = timestamp + 100 // starts in future
+                return fixture(hardCap, start, wallets, provider, true, false);
+            });
+            await expect(asPatron1.stake({ value: oneETH })).to.be.revertedWith("StakingPool: Pool has not started yet");
+        });
+
+        it("Should revert if staking pool has already expired", async function () {
+            const { duration, provider, asPatron1 } = await loadFixture(defaultFixture);
+            await timeTravel(provider, duration + 1);
+            await expect(asPatron1.stake({ value: oneETH })).to.be.revertedWith("StakingPool: Pool has already expired");
+        });
+
+        it("Should not compound stake after reaching expiry date", async function () {
+            const { asPatron1, duration, provider } = await loadFixture(defaultFixture);
+            await stakeAndTravel(asPatron1, oneETH, duration + 1, provider);
+            const [deposit, compounded] = await asPatron1.total();
+            await timeTravel(provider, duration + 1);
+            const [stakeAfterExpiry, compoundAfterExpiry] = await asPatron1.total();
+            expect(stakeAfterExpiry).to.be.equal(deposit);
+            expect(compoundAfterExpiry).to.be.equal(compounded);
+        });  
+  });
+
+  describe("Unstaking", async () => {})
 })
