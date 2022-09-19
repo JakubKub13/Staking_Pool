@@ -134,4 +134,14 @@ describe("Staking Pool", function () {
         ).to.be.revertedWith("StakingPool: Rewards lower than expected");
     })
 
+    it("Should allow to terminate staking pool before it reached the start", async function () {
+        const { owner, asOwner, rewards } = await loadFixture(initNoTravelFixture);
+        await expect(await asOwner.terminate()).to.changeEtherBalance(owner, rewards);
+    })
+
+    it("Should send the funds back to original initiator", async function () {
+        const { owner, asOwner2, rewards } = await loadFixture(initNoTravelFixture);
+        await expect(await asOwner2.terminate()).to.changeEtherBalance(owner, rewards)
+    });
+
 })
