@@ -1,4 +1,3 @@
-import { pTokens } from 'ptokens'
 import { expect, use } from "chai";
 import { StakingPool } from "../ethers"; // artifacts ?
 import { Wallet, utils, BigNumber } from "ethers";
@@ -234,5 +233,22 @@ describe("Staking Pool", function () {
         });  
   });
 
-  describe("Unstaking", async () => {})
+  describe("Unstaking", async () => {
+    it("Should unstake funds", async function () {
+        const { patron1, asPatron1 } = await loadFixture(defaultFixture);
+        await asPatron1.stake({ value: oneETH});
+        await expect(await asPatron1.unstakeAll()).to.changeEtherBalance(patron1, oneETH);
+        const [deposit, compound] = await asPatron1.total();
+        expect(deposit).to.be.equal(BigNumber.from(0));
+        expect(compound).to.be.equal(BigNumber.from(0));
+    });
+
+    it("Should decrease the balance of the staking pool", async function () {
+        const { stakingPool, asPatron1 } = await loadFixture(defaultFixture);
+        await asPatron1.stake({ value: oneETH });
+        await expect(await asPatron1.unstakeAll()).to.changeEtherBalance(stakingPool, oneETH.mul(-1));
+    });
+
+    
+  })
 })
