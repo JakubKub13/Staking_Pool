@@ -44,7 +44,30 @@ describe("Staking Pool", function () {
         ])) as StakingPool;
         const rewards = (await stakingPool.compound(ratioInt, hardCap, start, end)).sub(hardCap);
 
-        if (initializePool) {}
+        if (initializePool) {
+            const asOwner = stakingPool.connect(owner);
+            try {
+                await claimManagerMocked.mock.hasRole.withArgs(owner.address, ownerRoleDef, defaultRoleVersion).returns(true);
+                await claimManagerMocked.mock.hasRole.withArgs(owner2.address, ownerRoleDef, defaultRoleVersion).returns(true);
+
+                await claimManagerMocked.mock.hasRole.withArgs(patron1.address, patronRoleDef, defaultRoleVersion).returns(true);
+                await claimManagerMocked.mock.hasRole.withArgs(patron2.address, patronRoleDef, defaultRoleVersion).returns(true);
+
+                const tx = await asOwner.init(start, end, ratioInt, hardCap, contributionLimit, [patronRoleDef], { value: rewards });
+                const { blockNumber } = await tx.wait();
+                const { timestamp } = await provider.getBlock(blockNumber);
+                await expect(tx).to.emit(stakingPool, "StakingPoolInitialized").withArgs(rewards, timestamp);
+                if(travel) {
+                    const travelTo = start - timestamp;
+                    await timeTravel(provider, travelTo);
+                }
+            } catch (error) {
+                console.log("Initialization Error: ");
+                console.log(error);
+            }
+        }
+
+        
 
     }
 
