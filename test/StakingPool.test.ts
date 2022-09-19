@@ -37,7 +37,7 @@ describe("Staking Pool", function () {
     ) {
         const duration = 3600 * 24 * 30;
         const end = start + duration;
-        const claimManagerMocked = await deployContract(patron1, claimManagerABI);
+        const claimManagerMocked = await deployMockContract(patron1, claimManagerABI);
         const stakingPool = (await deployContract(owner, StakingPoolContract, [
             ownerRoleDef,
             claimManagerMocked.address,
@@ -121,7 +121,7 @@ describe("Staking Pool", function () {
         await expect(asOwner.init(start, end, ratioInt, hardCap, aboveContributionLimit, [patronRoleDef], {
             value: rewards,
         }),
-        ).to.be.revertedWith("Stake is greater than contribution limit")
+        ).to.be.revertedWith("StakingPool: Hardcap exceeds contribution limit")
     });
 
 })
