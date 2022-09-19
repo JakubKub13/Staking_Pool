@@ -249,6 +249,37 @@ describe("Staking Pool", function () {
         await expect(await asPatron1.unstakeAll()).to.changeEtherBalance(stakingPool, oneETH.mul(-1));
     });
 
-    
+    it("Should revert when no funds have been staked by user", async function () {
+        const { asPatron1, asPatron2 } = await loadFixture(defaultFixture);
+        await asPatron1.stake({ value: oneETH });
+        await expect(asPatron2.unstakeAll()).to.be.revertedWith("StakingPool: No funds to unstake");
+    });
+
+    it("Should allow partial withdrawal up to compounded value", async function () {
+        const { asPatron1, provider, duration } = await loadFixture(defaultFixture);
+        const initialStake = oneETH;
+        await stakeAndTravel(asPatron1, initialStake, duration / 2, provider);
+        let [deposit, compounded] = await asPatron1.total();
+        const initialCompounded = compounded;
+        expect(compounded.gt(deposit)).to.be.true;
+        const withdrawalValue = initialStake.div(2);
+        await asPatron1.unstake(withdrawalValue);
+        [deposit, compounded] = await asPatron1.total();
+        expect(deposit).to.be.equal(initialStake.sub(withdrawalValue));
+        expect(compounded).to.be.equal(initialCompounded.sub(withdrawalValue));
+        await asPatron1.unstake(withdrawalValue);
+        [deposit, compounded] = await asPatron1.total();
+        expect(deposit).to.be.equal(BigNumber.from(0));
+        expect(compounded.gt(0)).to.be.true;
+        await asPatron1.unstake(compounded);
+        [deposit, compounded] = await asPatron1.total();
+        expect(deposit).to.be.equal(BigNumber.from(0));
+        expect(compounded).to.be.equal(BigNumber.from(0));
+    });
+
+    describe("Sweeping", async () => {
+        
+    })
+
   })
 })
