@@ -121,7 +121,17 @@ describe("Staking Pool", function () {
         await expect(asOwner.init(start, end, ratioInt, hardCap, aboveContributionLimit, [patronRoleDef], {
             value: rewards,
         }),
-        ).to.be.revertedWith("StakingPool: Hardcap exceeds contribution limit")
+        ).to.be.revertedWith("StakingPool: Hardcap exceeds contribution limit");
     });
+
+    it("Should revert if initial rewards are lower than max future rewards", async function () {
+        const { owner, asOwner, start, end, hardCap, claimManagerMocked, defaultRoleVersion, rewards } = await loadFixture(uninitializeFixture,);
+        await claimManagerMocked.mock.hasRole.withArgs(owner.address, ownerRoleDef, defaultRoleVersion).returns(true);
+        const smallerRewards = rewards.sub(1);
+        await expect(asOwner.init(start, end, ratioInt, hardCap, contributionLimit, [patronRoleDef], {
+            value: smallerRewards,
+        }),
+        ).to.be.revertedWith("StakingPool: Rewards lower than expected");
+    })
 
 })
