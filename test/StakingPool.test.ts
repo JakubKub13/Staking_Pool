@@ -99,5 +99,10 @@ describe("Staking Pool", function () {
         return fixture(hardCap, start, wallets, provider, true, false);
     }
 
+    async function uninitializeFixture(wallets: Wallet[], provider: MockProvider) {
+        const { timestamp } = await provider.getBlock("latest");
+        const start = timestamp + 10;
+        return fixture(hardCap, start, wallets, provider, false);
+    }
 
 })
