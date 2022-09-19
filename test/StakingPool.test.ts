@@ -67,8 +67,30 @@ describe("Staking Pool", function () {
             }
         }
 
-        
+        return {
+            stakingPool,
+            patron1,
+            patron2,
+            owner,
+            asPatron1: stakingPool.connect(patron1),
+            asPatron2: stakingPool.connect(patron2),
+            asOwner: stakingPool.connect(owner),
+            asOwner2: stakingPool.connect(owner2),
+            provider,
+            duration,
+            defaultRoleVersion,
+            claimManagerMocked,
+            start,
+            end,
+            hardCap,
+            rewards
+        };
+    }
 
+    async function defaultFixture(wallets: Wallet[], provider: MockProvider) {
+        const { timestamp } = await provider.getBlock("latest");
+        const start = timestamp + 10;
+        return fixture(hardCap, start, wallets, provider);
     }
 
 
