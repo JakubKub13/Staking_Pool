@@ -313,8 +313,14 @@ describe("Staking Pool", function () {
 
         it("Should not be possible to sweep before expiry", async function () {
             const { asOwner } = await loadFixture(defaultFixture);
-            await expect(asOwner.sweep()).to.be.revertedWith("StakingPool: Cannot sweep before expiry")
-        })
+            await expect(asOwner.sweep()).to.be.revertedWith("StakingPool: Cannot sweep before expiry");
+        });
+
+        it("Should allow to sweep only once", async function () {
+            const { asOwner } = await loadFixture(initialStakeAndTravelToExpiryFixture);
+            await asOwner.sweep();
+            await expect(asOwner.sweep()).to.be.revertedWith("StakingPool: Already sweeped");
+        });
     })
 
   })
