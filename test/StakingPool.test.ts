@@ -295,6 +295,21 @@ describe("Staking Pool", function () {
             const { rewards } = await quote(stakingPools);
             return initialRewards.sub(rewards);
         }
+
+        async function assertTransferAndBalance(
+            initialRewards: BigNumber,
+            patrons: StakingPool[],
+            asOwner: StakingPool,
+            owner: Wallet,
+            provider: MockProvider,
+            expectedSweep?: BigNumber,
+            expectedBalance?: BigNumber
+        ) {
+            const { deposits, rewards } = await quote(patrons);
+            const toSweep = expectedSweep ?? (await calculateExpectedSweep(patrons, initialRewards));
+            await expect(await asOwner.sweep()).to.changeEtherBalance(owner, toSweep);
+            expect(await provider.getBalance(asOwner.address)).to.be.equal(expectedBalance ?? deposits.add(rewards));
+        }
     })
 
   })
