@@ -325,7 +325,14 @@ describe("Staking Pool", function () {
         it("Should sweep remaining rewards when patrons staked", async function () {
             const { owner, asPatron1, asOwner, provider, rewards } = await loadFixture(initialStakeAndTravelToExpiryFixture);
             await assertTransferAndBalance(rewards, [asPatron1], asOwner, owner, provider);
-        })
+        });
+
+        it("Should sweep remaining rewards when patron staked multiple times", async function () {
+            const { owner, asPatron1, asOwner, duration, provider, rewards } = await loadFixture(defaultFixture);
+            await stakeAndTravel(asPatron1, oneETH, duration / 2, provider);
+            await stakeAndTravel(asPatron1, oneETH, duration, provider);
+            await assertTransferAndBalance(rewards, [asPatron1], asOwner, owner, provider);
+        });
     })
 
   })
