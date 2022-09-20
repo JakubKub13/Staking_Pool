@@ -278,7 +278,23 @@ describe("Staking Pool", function () {
     });
 
     describe("Sweeping", async () => {
-        
+        async function quote(stakingPools: StakingPool[]) {
+            let deposits = BigNumber.from(0);
+            let rewards = BigNumber.from(0);
+
+            for(const stakingPool of stakingPools) {
+                const [deposit, compounded] = await stakingPool.total();
+                const reward = compounded.sub(deposit);
+                deposits = deposits.add(deposit);
+                rewards = rewards.add(reward);
+            }
+            return { deposits, rewards };
+        }
+
+        async function calculateExpectedSweep(stakingPools: StakingPool[], initialRewards: BigNumber) {
+            const { rewards } = await quote(stakingPools);
+            return initialRewards.sub(rewards);
+        }
     })
 
   })
