@@ -333,6 +333,15 @@ describe("Staking Pool", function () {
             await stakeAndTravel(asPatron1, oneETH, duration, provider);
             await assertTransferAndBalance(rewards, [asPatron1], asOwner, owner, provider);
         });
+
+        it("Should sweep remaining rewards when patron staked multiple times from multiple patrons", async function () {
+            const { owner, asPatron1, asPatron2, asOwner, duration, provider, rewards } = await loadFixture(defaultFixture);
+            await stakeAndTravel(asPatron1, oneETH, duration / 2, provider);
+            await stakeAndTravel(asPatron2, oneETH, 0, provider);
+            await stakeAndTravel(asPatron1, oneETH, duration, provider);
+            const expectedSweep = await calculateExpectedSweep([asPatron1,asPatron2], rewards);
+            await assertTransferAndBalance(rewards, [asPatron1, asPatron2], asOwner, owner, provider, expectedSweep);
+        })
     })
 
   })
