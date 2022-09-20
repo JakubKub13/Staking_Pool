@@ -310,6 +310,11 @@ describe("Staking Pool", function () {
             await expect(await asOwner.sweep()).to.changeEtherBalance(owner, toSweep);
             expect(await provider.getBalance(asOwner.address)).to.be.equal(expectedBalance ?? deposits.add(rewards));
         }
+
+        it("Should not be possible to sweep before expiry", async function () {
+            const { asOwner } = await loadFixture(defaultFixture);
+            await expect(asOwner.sweep()).to.be.revertedWith("StakingPool: Cannot sweep before expiry")
+        })
     })
 
   })

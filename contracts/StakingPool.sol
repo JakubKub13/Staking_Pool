@@ -157,7 +157,7 @@ contract StakingPool {
 
     function sweep() public initialized onlyOwner {
        require(!sweeped , "StakingPool: Already sweeped");
-       require(block.timestamp >= end, "Cannot sweep before expiry");
+       require(block.timestamp >= end, "StakingPool: Cannot sweep before expiry");
        uint256 payout = remainingRewards - futureRewards;
        sweeped = true;
        (bool success,) = payable(initiator).call{value: payout}("");
