@@ -341,7 +341,22 @@ describe("Staking Pool", function () {
             await stakeAndTravel(asPatron1, oneETH, duration, provider);
             const expectedSweep = await calculateExpectedSweep([asPatron1,asPatron2], rewards);
             await assertTransferAndBalance(rewards, [asPatron1, asPatron2], asOwner, owner, provider, expectedSweep);
-        })
+        });
+
+        it("Should sweep remaining rewards when patron staked and withdrawn after expiry", async function () {
+            const { owner, asPatron1, asOwner, provider, rewards } = await loadFixture(initialStakeAndTravelToExpiryFixture);
+            const expectedSweep = await calculateExpectedSweep([asPatron1], rewards);
+            await asPatron1.unstakeAll();
+            await assertTransferAndBalance(rewards, [asPatron1], asOwner, owner, provider, expectedSweep, BigNumber.from(0));
+        });
+
+        it("Should sweep remaining rewards when patron staked and withdrawn before expiry", async function () {
+            const { owner, asPatron1, asOwner, duration, provider, rewards } = await loadFixture(defaultFixture);
+            await stakeAndTravel(asPatron1, oneETH, duration / 2, provider);
+            await asPatron1.unstake(oneETH);
+            await timeTravel(provider, duration);
+            await assertTransferAndBalance(rewards, [asPatron1], asOwner, owner, provider);
+        });
     })
 
   })
