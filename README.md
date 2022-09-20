@@ -10,16 +10,6 @@ Staking Pool can be in one of the following states during it's lifecycle:
 4. EXPIRED - When current block.timestamp is greater than or equal end
 5. SWEPT / CLEANED - sweep() function executed
 
-State vs Staking Pool operations
-------------------------------------------------------------------------
-########    | Rewards locked | Staking | Unstaking | Compounding 
-DEPLOYED    |   No           |  No     |    No     |    No 
-INITIALIZED |   Yes          |  No     |    No     |    No
-OPEN        |   Yes          |  Yes    |    Yes    |    Yes
-EXPIRED     |   Yes          |  No     |    Yes    |    No
-SWEPT       |   No           |  No     |    Yes    |    No
-------------------------------------------------------------------------
-
 
 FUNDING
 
