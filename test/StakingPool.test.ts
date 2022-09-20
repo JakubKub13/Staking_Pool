@@ -321,6 +321,11 @@ describe("Staking Pool", function () {
             await asOwner.sweep();
             await expect(asOwner.sweep()).to.be.revertedWith("StakingPool: Already sweeped");
         });
+
+        it("Should sweep remaining rewards when patrons staked", async function () {
+            const { owner, asPatron1, asOwner, provider, rewards } = await loadFixture(initialStakeAndTravelToExpiryFixture);
+            await assertTransferAndBalance(rewards, [asPatron1], asOwner, owner, provider);
+        })
     })
 
   })
