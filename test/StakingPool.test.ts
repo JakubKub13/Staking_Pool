@@ -275,6 +275,7 @@ describe("Staking Pool", function () {
         [deposit, compounded] = await asPatron1.total();
         expect(deposit).to.be.equal(BigNumber.from(0));
         expect(compounded).to.be.equal(BigNumber.from(0));
+        });
     });
 
     describe("Sweeping", async () => {
@@ -357,7 +358,18 @@ describe("Staking Pool", function () {
             await timeTravel(provider, duration);
             await assertTransferAndBalance(rewards, [asPatron1], asOwner, owner, provider);
         });
-    })
 
-  })
-})
+        it("Maximum compound precision error should not result in error greater than 1 cent", async function () {
+            const { stakingPool, start, end, duration } = await loadFixture(defaultFixture);
+            const oneCent = utils.parseUnits("0.001", "ether");
+            const patronStake = 50000;
+            const patronStakeWei = utils.parseUnits(patronStake.toString(), "ether");
+            const periods = duration / 3600;
+            const compounded = await stakingPool.compound(ratioInt, patronStakeWei, start, end);
+            const expectedCompounded = patronStake * Math.pow(1 + ratio, periods);
+            const expected = utils.parseUnits(expectedCompounded.toString(), 18);
+            const difference = compounded.sub(expected).abs().toNumber();
+            expect(difference).to.be.lessThanOrEqual(oneCent.toNumber());
+        });
+    });
+});
